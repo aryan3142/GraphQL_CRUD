@@ -1,3 +1,9 @@
+using GraphQLCRUD.GraphQL;
+using GraphQLCRUD.Service;
+using GraphQLCRUD.Service.IService;
+using HotChocolate;
+using HotChocolate.AspNetCore;
+using HotChocolate.AspNetCore.Playground;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +22,16 @@ namespace GraphQLCRUD
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IGroupService, GroupService>();
+            services.AddSingleton<IStudentService, StudentService>();
+            services.AddGraphQL(x => SchemaBuilder.New()
+                .AddServices(x)
+                .AddType<GroupType>()
+                .AddType<StudentType>()
+                .AddQueryType<Query>()
+                .AddMutationType<Mutation>()
+                .Create()
+                );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -24,7 +40,13 @@ namespace GraphQLCRUD
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UsePlayground(new PlaygroundOptions
+                {
+                    QueryPath = "/api",
+                    Path = "/Playground"
+                });
             }
+            app.UseGraphQL("/api");
 
             app.UseRouting();
 
